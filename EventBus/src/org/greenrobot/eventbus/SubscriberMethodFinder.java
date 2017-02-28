@@ -43,6 +43,7 @@ class SubscriberMethodFinder {
     //Retrofit中ServiceMethod也是采用同样的原理缓存方法
     private static final Map<Class<?>, List<SubscriberMethod>> METHOD_CACHE = new ConcurrentHashMap<>();
 
+
     private List<SubscriberInfoIndex> subscriberInfoIndexes;
     private final boolean strictMethodVerification;
     private final boolean ignoreGeneratedIndex;
