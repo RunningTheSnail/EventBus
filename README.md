@@ -5,6 +5,28 @@ EventBus is a publish/subscribe event bus optimized for Android.<br/>
 
 EventBus...
 
+EventBus 事件总线 总结:
+	基于观察者模式 +反射 (或者apt生成代码) annotain-Processor 升级版?
+
+要使用编译中生成的代码必须配置EventBubBuilder 中的’索引’  该类查找了订阅者所有订阅方法。
+
+自己生成的EventBus最好 setDefaultInstance() 单例配置
+
+观察者那肯定要有观察者和被观察者，而观察者关注某件事情，要实现观察者和被观察者之间的解耦，必须引用第三方。由第三方持有观察者和被观察者的引用。
+
+核心方法
+	register
+	unregister
+	post
+
+核心变量:
+	第三方机构
+	Subscription包含订阅者订阅方法
+Register核心 是下面两个方法
+Post 核心	Map<EventType,List<Subscription>
+unregister核心	Map<Subscriber,List<EventType>>
+
+
  * simplifies the communication between components
     * decouples event senders and receivers
     * performs well with Activities, Fragments, and background threads
