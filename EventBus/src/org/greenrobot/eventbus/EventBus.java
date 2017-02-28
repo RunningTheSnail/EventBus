@@ -52,11 +52,25 @@ public class EventBus {
     private static final EventBusBuilder DEFAULT_BUILDER = new EventBusBuilder();
     private static final Map<Class<?>, List<Class<?>>> eventTypesCache = new HashMap<>();
 
+    //MySelf
     //Key事件类型,Value 多个订阅者
+
+    //描述比较详细的引用:
+    // subscriptionsByEventType是一个map集合,存储着每个事件对应的subscription集合 (key:EventType value: List<subscription>)
+    // subscription是对订阅者还有订阅方法SubscriberMethod的包装
+    // SubscriberMethod又是对method，优先级，线程类型，是否接受粘性事件的包装
+
     private final Map<Class<?>, CopyOnWriteArrayList<Subscription>> subscriptionsByEventType;
+    //MySelf
+    //Key订阅者,Value 订阅者包含的事件类型
+
+    //描述引用:
+    // typesBySubscriber也是一个map集合,存储着每个订阅者订阅的事件集合( key：订阅者 value：List<EventType>)
     private final Map<Object, List<Class<?>>> typesBySubscriber;
     private final Map<Class<?>, Object> stickyEvents;
 
+    //ThreadLocal 线程作用域变量
+    //获取当前线程的post 状态
     private final ThreadLocal<PostingThreadState> currentPostingThreadState = new ThreadLocal<PostingThreadState>() {
         @Override
         protected PostingThreadState initialValue() {
@@ -75,6 +89,8 @@ public class EventBus {
     private final boolean logNoSubscriberMessages;
     private final boolean sendSubscriberExceptionEvent;
     private final boolean sendNoSubscriberEvent;
+
+    //是否支持事件继承
     private final boolean eventInheritance;
 
     private final int indexCount;
@@ -175,9 +191,11 @@ public class EventBus {
         }
 
         int size = subscriptions.size();
+
         for (int i = 0; i <= size; i++) {
-            //按照优先级重新排序
+            //按照优先级插入
             if (i == size || subscriberMethod.priority > subscriptions.get(i).subscriberMethod.priority) {
+                //将同一个事件类型的  订阅者保存在一起
                 subscriptions.add(i, newSubscription);
                 break;
             }
@@ -190,6 +208,7 @@ public class EventBus {
         }
         subscribedEvents.add(eventType);
 
+        // 如果当前订阅方法接受粘性事件，并且订阅方法关心的事件在粘性事件集合中，那么将该event事件post给subscriber
         if (subscriberMethod.sticky) {
             if (eventInheritance) {
                 // Existing sticky events of all subclasses of eventType have to be considered.
@@ -266,8 +285,10 @@ public class EventBus {
         eventQueue.add(event);
 
         if (!postingState.isPosting) {
+            //判断是否是主线程
             postingState.isMainThread = Looper.getMainLooper() == Looper.myLooper();
             postingState.isPosting = true;
+            //判断是否取消了
             if (postingState.canceled) {
                 throw new EventBusException("Internal error. Abort state was not reset");
             }
@@ -309,6 +330,8 @@ public class EventBus {
      * Posts the given event to the event bus and holds on to the event (because it is sticky). The most recent sticky
      * event of an event's type is kept in memory for future access by subscribers using {@link Subscribe#sticky()}.
      */
+
+    //发送粘性事件,需要再保存一份数据
     public void postSticky(Object event) {
         synchronized (stickyEvents) {
             stickyEvents.put(event.getClass(), event);
@@ -411,6 +434,7 @@ public class EventBus {
     private boolean postSingleEventForEventType(Object event, PostingThreadState postingState, Class<?> eventClass) {
         CopyOnWriteArrayList<Subscription> subscriptions;
         synchronized (this) {
+            //根据事件类型获取Subscription
             subscriptions = subscriptionsByEventType.get(eventClass);
         }
         if (subscriptions != null && !subscriptions.isEmpty()) {

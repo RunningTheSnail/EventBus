@@ -40,6 +40,8 @@ public class EventBusBuilder {
     boolean strictMethodVerification;
     ExecutorService executorService = DEFAULT_EXECUTOR_SERVICE;
     List<Class<?>> skipMethodVerificationForClasses;
+
+    //配置索引.... 编译时生成
     List<SubscriberInfoIndex> subscriberInfoIndexes;
 
     EventBusBuilder() {

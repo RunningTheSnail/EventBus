@@ -71,10 +71,10 @@ class SubscriberMethodFinder {
         }
 
         //默认false
-
         if (ignoreGeneratedIndex) {
             subscriberMethods = findUsingReflection(subscriberClass);
         } else {
+            //编译时生成的源码,找到所有的方法并添加到METHOD_CACHE中
             subscriberMethods = findUsingInfo(subscriberClass);
         }
         //每一个订阅者必须有订阅方法,否则抛出异常
@@ -91,6 +91,7 @@ class SubscriberMethodFinder {
     private List<SubscriberMethod> findUsingInfo(Class<?> subscriberClass) {
         FindState findState = prepareFindState();
         findState.initForSubscriber(subscriberClass);
+        //循环找到所有的订阅方法
         while (findState.clazz != null) {
             findState.subscriberInfo = getSubscriberInfo(findState);
             if (findState.subscriberInfo != null) {
@@ -177,13 +178,16 @@ class SubscriberMethodFinder {
             findState.skipSuperClasses = true;
         }
         for (Method method : methods) {
+            //获取方法的修饰符
             int modifiers = method.getModifiers();
             if ((modifiers & Modifier.PUBLIC) != 0 && (modifiers & MODIFIERS_IGNORE) == 0) {
                 Class<?>[] parameterTypes = method.getParameterTypes();
+                //判断参数是否只有一个
                 if (parameterTypes.length == 1) {
                     Subscribe subscribeAnnotation = method.getAnnotation(Subscribe.class);
                     if (subscribeAnnotation != null) {
                         Class<?> eventType = parameterTypes[0];
+                        //检查参数类型 一样的有几个方法
                         if (findState.checkAdd(method, eventType)) {
                             ThreadMode threadMode = subscribeAnnotation.threadMode();
                             findState.subscriberMethods.add(new SubscriberMethod(method, eventType, threadMode,
